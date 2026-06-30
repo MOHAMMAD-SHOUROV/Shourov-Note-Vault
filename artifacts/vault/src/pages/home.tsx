@@ -335,10 +335,13 @@ function VaultCard({
             {isOwner && (
               <motion.button
                 data-testid={`delete-item-${item.id}`}
-                initial={{ opacity: 0 }}
-                whileHover={{ scale: 1.15 }}
+                initial={{ opacity: 0, scale: 0.7 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.2, backgroundColor: "rgba(255,50,50,0.15)" }}
+                whileTap={{ scale: 0.9 }}
                 onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded text-destructive hover:bg-destructive/15"
+                className="p-1.5 rounded text-destructive"
+                style={{ color: "#ff3232" }}
               >
                 <Trash2 className="w-4 h-4" />
               </motion.button>
