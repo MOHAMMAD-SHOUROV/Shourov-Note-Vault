@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUpload } from "@workspace/object-storage-web";
 import {
   useListItems,
   useCreateItem,
@@ -507,14 +508,40 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
   const [content, setContent] = useState("");
   const [color, setColor] = useState("#00eaff");
   const [detectedType, setDetectedType] = useState<ItemType>("text");
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; objectPath: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadFile, isUploading, progress } = useUpload({
+    onSuccess: (res) => {
+      setUploadedFile({ name: res.metadata!.name, objectPath: res.objectPath });
+      setContent(res.objectPath);
+      toast({ title: "File uploaded!", description: res.metadata!.name });
+    },
+    onError: (err) => {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    },
+  });
 
   useEffect(() => {
-    setDetectedType(detectType(content));
+    if (detectedType !== "app") setDetectedType(detectType(content));
   }, [content]);
 
   const handleClose = () => {
-    setName(""); setContent(""); setColor("#00eaff"); setDetectedType("text");
+    setName(""); setContent(""); setColor("#00eaff"); setDetectedType("text"); setUploadedFile(null);
     onClose();
+  };
+
+  const handleTypeChange = (v: string) => {
+    setDetectedType(v as ItemType);
+    if (v !== "app") { setUploadedFile(null); }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDetectedType("app");
+    await uploadFile(file);
+    e.target.value = "";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -562,7 +589,6 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
                 caretColor: "#ff4444",
               }}
             />
-            {/* Live name preview with typing animation */}
             {name && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
@@ -575,22 +601,60 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
             )}
           </div>
 
+          {/* App file upload zone */}
+          {detectedType === "app" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="space-y-2"
+            >
+              <label className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Upload App File</label>
+              <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelect} />
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full rounded-lg border-2 border-dashed p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors"
+                style={{ borderColor: hexToRgba("#00eaff", 0.4), background: hexToRgba("#00eaff", 0.04) }}
+              >
+                <AppWindow className="w-8 h-8" style={{ color: "#00eaff" }} />
+                {isUploading ? (
+                  <>
+                    <span className="text-sm font-mono text-cyan-400">Uploading... {progress}%</span>
+                    <div className="w-full bg-black/40 rounded-full h-1.5 mt-1">
+                      <div className="h-1.5 rounded-full bg-cyan-400 transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                  </>
+                ) : uploadedFile ? (
+                  <span className="text-sm font-mono text-green-400">✓ {uploadedFile.name}</span>
+                ) : (
+                  <span className="text-sm font-mono text-muted-foreground">Click to select file (APK, ZIP, EXE, any)</span>
+                )}
+              </motion.button>
+            </motion.div>
+          )}
+
           <div className="space-y-1">
-            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Content</label>
+            <label className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+              {detectedType === "app" ? "Description (optional)" : "Content"}
+            </label>
             <Textarea
               data-testid="textarea-item-content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Paste a link, code, JS, app link, or any text..."
-              className="font-mono text-sm bg-black/40 border-primary/20 focus-visible:border-primary min-h-32 resize-none"
+              value={detectedType === "app" && uploadedFile ? `[FILE:${uploadedFile.name}] ${uploadedFile.objectPath}` : content}
+              onChange={(e) => { if (detectedType !== "app" || !uploadedFile) setContent(e.target.value); }}
+              readOnly={detectedType === "app" && !!uploadedFile}
+              placeholder={detectedType === "app" ? "Upload a file above, or paste an app link..." : "Paste a link, code, JS, or any text..."}
+              className="font-mono text-sm bg-black/40 border-primary/20 focus-visible:border-primary min-h-20 resize-none"
             />
             {/* Auto-detected type + manual override */}
             <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-muted-foreground">Detected:</span>
+                <span className="text-xs font-mono text-muted-foreground">Type:</span>
                 <TypeBadge type={detectedType} />
               </div>
-              <Select value={detectedType} onValueChange={(v) => setDetectedType(v as ItemType)}>
+              <Select value={detectedType} onValueChange={handleTypeChange}>
                 <SelectTrigger className="h-7 text-xs font-mono bg-black/40 border-primary/20 w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -632,11 +696,11 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
             <GlowButton
               color={color}
               type="submit"
-              disabled={createItem.isPending || !name.trim() || !content.trim()}
+              disabled={createItem.isPending || isUploading || !name.trim() || (!content.trim() && !uploadedFile)}
               fullWidth
               testId="button-save-item"
             >
-              {createItem.isPending ? "Saving..." : "Save to Vault"}
+              {createItem.isPending ? "Saving..." : isUploading ? "Uploading..." : "Save to Vault"}
             </GlowButton>
           </div>
         </form>

@@ -6,10 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type VaultStatsByType = {
-  link?: number;
-  code?: number;
-  javascript?: number;
-  text?: number;
-  app?: number;
-};
+export interface ErrorEnvelope {
+  error: string;
+}
