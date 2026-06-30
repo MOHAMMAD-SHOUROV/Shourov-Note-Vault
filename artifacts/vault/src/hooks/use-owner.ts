@@ -1,8 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext, createContext } from "react";
 
-const OWNER_TOKEN_KEY = 'vault_owner_token';
+const OWNER_TOKEN_KEY = "vault_owner_token";
 
-export function useOwner() {
+interface OwnerContextType {
+  isOwner: boolean;
+  token: string | null;
+  login: (token: string) => void;
+  logout: () => void;
+}
+
+export const OwnerContext = createContext<OwnerContextType>({
+  isOwner: false,
+  token: null,
+  login: () => {},
+  logout: () => {},
+});
+
+export function useOwnerState(): OwnerContextType {
   const [isOwner, setIsOwner] = useState(false);
   const [token, setToken] = useState<string | null>(null);
 
@@ -27,4 +41,8 @@ export function useOwner() {
   };
 
   return { isOwner, token, login, logout };
+}
+
+export function useOwner() {
+  return useContext(OwnerContext);
 }

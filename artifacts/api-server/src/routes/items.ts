@@ -5,7 +5,7 @@ import { CreateItemBody, DeleteItemParams } from "@workspace/api-zod";
 
 const router = Router();
 
-const OWNER_TOKEN = process.env.OWNER_TOKEN ?? "shourov2024vault";
+const OWNER_TOKEN = process.env.OWNER_TOKEN ?? "247898";
 
 router.get("/items", async (req, res) => {
   try {

@@ -3,7 +3,7 @@ import { VerifyOwnerBody } from "@workspace/api-zod";
 
 const router = Router();
 
-const OWNER_TOKEN = process.env.OWNER_TOKEN ?? "shourov2024vault";
+const OWNER_TOKEN = process.env.OWNER_TOKEN ?? "247898";
 
 router.post("/auth/verify", (req, res) => {
   const parsed = VerifyOwnerBody.safeParse(req.body);

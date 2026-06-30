@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
+import { OwnerContext, useOwnerState } from "@/hooks/use-owner";
 
 const queryClient = new QueryClient();
 
@@ -17,14 +18,18 @@ function Router() {
 }
 
 function App() {
+  const ownerState = useOwnerState();
+
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <OwnerContext.Provider value={ownerState}>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </OwnerContext.Provider>
     </QueryClientProvider>
   );
 }
