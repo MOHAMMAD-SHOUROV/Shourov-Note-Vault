@@ -5,7 +5,9 @@
  * Alihsan Shourov's personal vault API
  * OpenAPI spec version: 0.1.0
  */
+import type { VaultStatsByType } from './vaultStatsByType';
 
-export interface HealthStatus {
-  status: string;
+export interface VaultStats {
+  total: number;
+  byType: VaultStatsByType;
 }

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Alihsan Shourov's Vault"
+version = "1.0.0"
+id = "artifacts/vault"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22433
+
+[services.development]
+run = "pnpm --filter @workspace/vault run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/vault", "run", "build" ]
+publicDir = "artifacts/vault/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22433"
+BASE_PATH = "/"

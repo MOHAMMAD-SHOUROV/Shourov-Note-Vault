@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Alihsan Shourov's personal vault API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: items
+    description: Vault items
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,99 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/verify:
+    post:
+      operationId: verifyOwner
+      tags: [auth]
+      summary: Verify owner password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "200":
+          description: Auth result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Unauthorized
+
+  /items:
+    get:
+      operationId: listItems
+      tags: [items]
+      summary: List all vault items
+      responses:
+        "200":
+          description: List of items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VaultItem"
+
+    post:
+      operationId: createItem
+      tags: [items]
+      summary: Create a vault item (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VaultItemInput"
+      responses:
+        "201":
+          description: Created item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultItem"
+        "401":
+          description: Unauthorized
+
+  /items/{id}:
+    delete:
+      operationId: deleteItem
+      tags: [items]
+      summary: Delete a vault item (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not found
+
+  /items/stats:
+    get:
+      operationId: getItemStats
+      tags: [items]
+      summary: Get vault statistics
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VaultStats"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +129,79 @@ components:
       required:
         - status
 
+    AuthInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+        token:
+          type: ["string", "null"]
+
+    VaultItem:
+      type: object
+      required: [id, name, type, content, color, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        type:
+          type: string
+          enum: [link, code, javascript, text]
+        content:
+          type: string
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    VaultItemInput:
+      type: object
+      required: [name, type, content, color, ownerToken]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum: [link, code, javascript, text]
+        content:
+          type: string
+          minLength: 1
+        color:
+          type: string
+        ownerToken:
+          type: string
+
+    DeleteResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    VaultStats:
+      type: object
+      required: [total, byType]
+      properties:
+        total:
+          type: integer
+        byType:
+          type: object
+          properties:
+            link:
+              type: integer
+            code:
+              type: integer
+            javascript:
+              type: integer
+            text:
+              type: integer
