@@ -33,6 +33,7 @@ import {
   Code2,
   Zap,
   FileText,
+  AppWindow,
   Plus,
   Copy,
   Download,
@@ -42,16 +43,17 @@ import {
 } from "lucide-react";
 import profilePhoto from "@assets/shourov.jpg";
 
-type ItemType = "link" | "code" | "javascript" | "text";
+type ItemType = "link" | "code" | "javascript" | "text" | "app";
 
 const TYPE_CONFIG: Record<
   ItemType,
   { icon: React.ReactNode; label: string; ext: string; color: string }
 > = {
-  link: { icon: <Link2 className="w-4 h-4" />, label: "Link", ext: ".txt", color: "#00ff88" },
-  code: { icon: <Code2 className="w-4 h-4" />, label: "Code", ext: ".txt", color: "#b24bff" },
-  javascript: { icon: <Zap className="w-4 h-4" />, label: "JavaScript", ext: ".js", color: "#ffe600" },
-  text: { icon: <FileText className="w-4 h-4" />, label: "Text", ext: ".txt", color: "#ff3fa4" },
+  link:       { icon: <Link2 className="w-4 h-4" />,      label: "Link",       ext: ".txt", color: "#00ff88" },
+  code:       { icon: <Code2 className="w-4 h-4" />,      label: "Code",       ext: ".txt", color: "#b24bff" },
+  javascript: { icon: <Zap className="w-4 h-4" />,        label: "JavaScript", ext: ".js",  color: "#ffe600" },
+  text:       { icon: <FileText className="w-4 h-4" />,   label: "Text",       ext: ".txt", color: "#ff3fa4" },
+  app:        { icon: <AppWindow className="w-4 h-4" />,  label: "App",        ext: ".txt", color: "#00eaff" },
 };
 
 const NEON_COLORS = [
@@ -343,12 +345,28 @@ function VaultCard({
             )}
           </div>
 
-          <h3
-            className="font-bold text-lg mb-2 truncate font-sans"
-            style={{ color: item.color, textShadow: `0 0 10px ${hexToRgba(item.color, 0.6)}` }}
+          <motion.h3
+            className="font-bold text-lg mb-2 font-sans flex items-center gap-1.5 truncate"
+            animate={{ textShadow: ["0 0 8px rgba(255,50,50,0.7)", "0 0 18px rgba(255,50,50,1)", "0 0 8px rgba(255,50,50,0.7)"] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            style={{ color: "#ff3232" }}
           >
-            {item.name}
-          </h3>
+            <motion.span
+              animate={{ opacity: [0.5, 1, 0.5], scale: [0.9, 1.15, 0.9] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+              style={{ color: "#ff3232", fontSize: "10px", flexShrink: 0 }}
+            >
+              ●
+            </motion.span>
+            <span className="truncate">{item.name}</span>
+            <motion.span
+              animate={{ opacity: [0.5, 1, 0.5], scale: [0.9, 1.15, 0.9] }}
+              transition={{ duration: 1.8, repeat: Infinity, delay: 0.9 }}
+              style={{ color: "#ff3232", fontSize: "10px", flexShrink: 0 }}
+            >
+              ●
+            </motion.span>
+          </motion.h3>
 
           <p className="text-muted-foreground text-sm font-mono line-clamp-2 mb-4 break-all">
             {item.content}
@@ -375,7 +393,9 @@ function VaultCard({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl font-bold" style={{ color: item.color }}>
               {config.icon}
-              {item.name}
+              <span style={{ color: "#ff3232", textShadow: "0 0 12px rgba(255,50,50,0.8)" }}>
+                ● {item.name} ●
+              </span>
             </DialogTitle>
           </DialogHeader>
           <div
@@ -558,13 +578,27 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
               data-testid="textarea-item-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Paste a link, code, JS, or any text..."
+              placeholder="Paste a link, code, JS, app link, or any text..."
               className="font-mono text-sm bg-black/40 border-primary/20 focus-visible:border-primary min-h-32 resize-none"
             />
-            {/* Auto-detected type */}
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs font-mono text-muted-foreground">Detected:</span>
-              <TypeBadge type={detectedType} />
+            {/* Auto-detected type + manual override */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-muted-foreground">Detected:</span>
+                <TypeBadge type={detectedType} />
+              </div>
+              <Select value={detectedType} onValueChange={(v) => setDetectedType(v as ItemType)}>
+                <SelectTrigger className="h-7 text-xs font-mono bg-black/40 border-primary/20 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="link">Link</SelectItem>
+                  <SelectItem value="code">Code</SelectItem>
+                  <SelectItem value="javascript">JavaScript</SelectItem>
+                  <SelectItem value="text">Text</SelectItem>
+                  <SelectItem value="app">App</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -696,6 +730,7 @@ export default function Home() {
                 { label: "Code", value: stats.byType.code ?? 0, color: "#b24bff" },
                 { label: "JS", value: stats.byType.javascript ?? 0, color: "#ffe600" },
                 { label: "Text", value: stats.byType.text ?? 0, color: "#ff3fa4" },
+                { label: "Apps", value: stats.byType.app ?? 0, color: "#00eaff" },
               ].map((s) => (
                 <motion.div
                   key={s.label}

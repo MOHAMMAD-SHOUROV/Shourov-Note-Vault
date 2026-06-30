@@ -155,7 +155,7 @@ components:
           type: string
         type:
           type: string
-          enum: [link, code, javascript, text]
+          enum: [link, code, javascript, text, app]
         content:
           type: string
         color:
@@ -172,7 +172,7 @@ components:
           minLength: 1
         type:
           type: string
-          enum: [link, code, javascript, text]
+          enum: [link, code, javascript, text, app]
         content:
           type: string
           minLength: 1

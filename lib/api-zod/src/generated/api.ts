@@ -35,7 +35,7 @@ export const VerifyOwnerResponse = zod.object({
 export const ListItemsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['link', 'code', 'javascript', 'text']),
+  "type": zod.enum(['link', 'code', 'javascript', 'text', 'app']),
   "content": zod.string(),
   "color": zod.string(),
   "createdAt": zod.string()
@@ -52,7 +52,7 @@ export const ListItemsResponse = zod.array(ListItemsResponseItem)
 
 export const CreateItemBody = zod.object({
   "name": zod.string().min(1),
-  "type": zod.enum(['link', 'code', 'javascript', 'text']),
+  "type": zod.enum(['link', 'code', 'javascript', 'text', 'app']),
   "content": zod.string().min(1),
   "color": zod.string(),
   "ownerToken": zod.string()
@@ -61,7 +61,7 @@ export const CreateItemBody = zod.object({
 export const CreateItemResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "type": zod.enum(['link', 'code', 'javascript', 'text']),
+  "type": zod.enum(['link', 'code', 'javascript', 'text', 'app']),
   "content": zod.string(),
   "color": zod.string(),
   "createdAt": zod.string()

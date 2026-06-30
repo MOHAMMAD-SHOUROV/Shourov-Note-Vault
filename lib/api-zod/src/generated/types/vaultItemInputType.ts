@@ -14,4 +14,5 @@ export const VaultItemInputType = {
   code: 'code',
   javascript: 'javascript',
   text: 'text',
+  app: 'app',
 } as const;

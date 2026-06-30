@@ -14,4 +14,5 @@ export const VaultItemType = {
   code: 'code',
   javascript: 'javascript',
   text: 'text',
+  app: 'app',
 } as const;
