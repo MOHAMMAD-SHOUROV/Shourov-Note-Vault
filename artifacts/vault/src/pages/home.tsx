@@ -413,6 +413,33 @@ function VaultCard({
 }
 
 // Typing cursor animation for detected type display
+function NamePreview({ text }: { text: string }) {
+  const [cursor, setCursor] = useState(true);
+  useEffect(() => {
+    const t = setInterval(() => setCursor((c) => !c), 500);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <motion.span
+      key={text.length}
+      className="font-mono text-sm font-bold"
+      style={{
+        color: "#ff4444",
+        textShadow: "0 0 10px rgba(255,68,68,0.9), 0 0 22px rgba(255,68,68,0.5)",
+      }}
+    >
+      {text}
+      <motion.span
+        animate={{ opacity: cursor ? 1 : 0 }}
+        transition={{ duration: 0 }}
+        style={{ color: "#ff4444" }}
+      >
+        |
+      </motion.span>
+    </motion.span>
+  );
+}
+
 function TypeBadge({ type }: { type: ItemType }) {
   const config = TYPE_CONFIG[type];
   const [shown, setShown] = useState(false);
@@ -505,8 +532,24 @@ function AddItemDialog({ open, onClose, token }: { open: boolean; onClose: () =>
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="My awesome snippet"
-              className="font-mono bg-black/40 border-primary/20 focus-visible:border-primary"
+              className="font-mono bg-black/40 border-red-500/40 focus-visible:border-red-500 focus-visible:ring-red-500/30"
+              style={{
+                color: name ? "#ff4444" : undefined,
+                textShadow: name ? "0 0 10px rgba(255,68,68,0.8), 0 0 20px rgba(255,68,68,0.4)" : undefined,
+                caretColor: "#ff4444",
+              }}
             />
+            {/* Live name preview with typing animation */}
+            {name && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-1 pt-1 px-1"
+              >
+                <span className="text-xs font-mono text-muted-foreground opacity-60">Preview:</span>
+                <NamePreview text={name} />
+              </motion.div>
+            )}
           </div>
 
           <div className="space-y-1">
